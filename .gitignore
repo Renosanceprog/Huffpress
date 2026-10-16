@@ -3,3 +3,8 @@ huffman.pptx
 *.exe
 eriecommand.txt
 *.txt
+exports/test.huf
+exports/1.huf
+treesanitycheck.cpp
+test.huf
+ProjectHuffman.cpp
