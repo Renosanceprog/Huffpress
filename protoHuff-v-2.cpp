@@ -178,7 +178,7 @@ class huffTree{
         createCodes(p->right,path.append("1"));
     }
     //========[IO Module]=======================
-    class IOModule
+    class writeModule
     {
         private:
         unsigned char buf;
@@ -201,12 +201,12 @@ class huffTree{
         void resetBuf(){buf = 0; ctr = 0;}
         
         public:
-        IOModule(string filename)
+        writeModule(string filename)
         {
             file = ofstream(filename+".huf", ios::out | ios::binary); 
             resetBuf();
         }
-        ~IOModule()
+        ~writeModule()
         {
             file.close();
         }
@@ -231,6 +231,46 @@ class huffTree{
             file.put(padding);
         }
     };
+    class readModule
+    {
+    private:
+        ifstream *file;
+        char buf;
+        int remBits;
+
+    public:
+        readModule(ifstream *f, int &padding)
+        {
+            file = f;
+            buf = 0;
+            remBits = 0;
+
+            char c;
+            file->get(c);
+            padding = (int)c;
+        }
+        int readBit()
+        {
+            if (remBits == 0)
+            {
+                file->get(buf);
+                remBits = 8;
+            }
+            remBits--;
+            return (buf >> remBits) & 1;
+        }
+        char readByte()
+        {
+            char c = 0;
+            for (int i = 0; i < 8; i++)
+            {
+                int b = readBit();
+                if (b == -1) break;
+                c = (c << 1) | b;
+            }
+            return c;
+        }
+    };
     //========[IO FUNCTIONS]=======================
     //========[FILE ENCODING]=======================
     void generateTreeHeaderString(huffNode *p, string &s)
@@ -248,7 +288,7 @@ class huffTree{
     void generateFile(string filename)
     {
         string treeHeader; generateTreeHeaderString(tree, treeHeader);
-        IOModule io = IOModule(filename);
+        writeModule io = writeModule(filename);
         fstream plaintext(fname);
 
         io.writeByte(0);
@@ -270,11 +310,57 @@ class huffTree{
         if (io.getCtr() != 0) io.writePadding();
     }
     //========[FILE DECODING]======================
+    huffNode* retrieveTree(readModule &io) {
+        int bit = io.readBit();
+        if (bit == -1) return NULL;
+
+        if (bit == 1) {
+            // Leaf node: read the next 8 bits as the original character
+            unsigned char ch = io.readByte();
+            return new huffNode(0, ch);
+        } else {
+            // Internal node: recursively build left and right subtrees
+            huffNode* node = new huffNode(0);
+            node->left = retrieveTree(io);
+            node->right = retrieveTree(io);
+            return node;
+        }
+    }
+    bool decodeFile(string filename)
+    {
+        ifstream file(filename);
+        int padding;
+        if (!file.is_open())
+        {
+            printf("File not found.\n");
+            return false;
+        }
+
+        readModule io = readModule(&file, padding);
+        decodedtree = retrieveTree(io);
+        while (true)
+        {
+            int bit;
+            huffNode *p = decodedtree;
+            while (true)
+            {
+                bit = io.readBit();
+                if (bit == -1) break;
+                (bit == 0) ? p = p->left : p->right;
+                if (p->left == NULL && p->right == NULL) break;
+            }
+            if (bit == -1) break;
+            cout<<p->myChar;
+        }
+        file.close();
+        return true;
+    }
     //========[CLASS ATTRIBUTES]===================
     char map[255] = {0};
     codeNode codes[255];
     pQueue *treeQueue;
     huffNode *tree;
+    huffNode *decodedtree;
     string fname;
 
     public:
@@ -318,6 +404,13 @@ class huffTree{
         cin>>s;
         generateFile(".\\exports\\"+s);
     }
+    void decodeText()
+    {
+        string s;
+        cout<<"Enter filename to decode: ";
+        cin>>s;
+        decodeFile(".\\exports\\"+s+".huf");
+    }
 };
 
 int main(int argc, char const *argv[])
@@ -325,6 +418,6 @@ int main(int argc, char const *argv[])
     huffTree tree = huffTree("plaintext.txt");
     tree.displayTree();
     tree.displayCodes();
-    tree.encodeText();
+    tree.decodeText();
     return 0;
 }

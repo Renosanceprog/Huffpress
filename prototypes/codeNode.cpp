@@ -18,6 +18,11 @@ struct codeNode
 
 int main(int argc, char const *argv[])
 {
-    cout<<sizeof(codeNode);
+    cout<<sizeof(unsigned char)<<endl;
+    cout<<sizeof(char)<<endl;
+    cout<<sizeof(unsigned int)<<endl;
+    cout<<sizeof(int)<<endl;
+    cout<<sizeof(bool)<<endl;
+    cout<<sizeof(codeNode)<<endl;
     return 0;
 }
