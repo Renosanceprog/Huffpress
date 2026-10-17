@@ -8,3 +8,4 @@ exports/1.huf
 treesanitycheck.cpp
 test.huf
 ProjectHuffman.cpp
+*.huf
