@@ -10,11 +10,11 @@ class huffTree{
 //=======[TREE NODE]==========================
     struct huffNode
     {
-        char myChar;
-        int myFreq;
+        unsigned char myChar;
+        unsigned long myFreq;
         huffNode *left;
         huffNode *right;
-        huffNode(int frq, char c)
+        huffNode(int frq, unsigned char c)
         {
             myFreq = frq;
             myChar = c;
@@ -32,15 +32,9 @@ class huffTree{
     //=======[CODE STRUCT]=============================
         struct codeNode
         {
-            int myPadding;
-            char myCode;
+            string myCode;
             bool isActive;
-            codeNode()
-            {
-                isActive = false;
-                myPadding = 0;
-                myCode = 0;
-            }
+            codeNode() { isActive = false; }
         };
 //=======[PRIORITY QUEUE]==========================
     class pQueue{
@@ -55,11 +49,11 @@ class huffTree{
                 next = NULL;
             }
         };
-        
-        
+
+
         qNode *f;
         int ctr;
-        
+
         public:
         bool isEmpty(){return ctr == 0;}
         int count(){return ctr;}
@@ -72,9 +66,9 @@ class huffTree{
         void enqueue(huffNode *data)
         {
             qNode *newnode = new qNode(data);
-            if (isEmpty() || data->myFreq < f->data->myFreq) 
+            if (isEmpty() || data->myFreq < f->data->myFreq)
             {
-                newnode->next = f; 
+                newnode->next = f;
                 f = newnode;
             }
             else
@@ -91,7 +85,7 @@ class huffTree{
         huffNode *dequeue()
         {
             if (isEmpty()) return NULL;
-            
+
             huffNode *val = f->data;
             qNode *del = f;
 
@@ -105,7 +99,7 @@ class huffTree{
 //=======[TREE CREATION]==============================
     bool createOccurenceMap()
     {
-        ifstream file(fname);
+        ifstream file(fname, ios::in | ios::binary);
         if (!file.is_open())
         {
             printf("File not found.\n");
@@ -113,7 +107,7 @@ class huffTree{
         }
 
         char ch;
-        while (file.get(ch)) map[ch]++;
+        while (file.get(ch)) map[(unsigned char)ch]++;
 
         file.close();
         return true;
@@ -125,7 +119,7 @@ class huffTree{
         for (size_t i = 0; i < 256; i++)
         {
             if (map[i] == 0) continue;
-            treeQueue->enqueue(new huffNode(map[i], i));
+            treeQueue->enqueue(new huffNode(map[i], (unsigned char)i));
         }
     }
 
@@ -167,11 +161,8 @@ class huffTree{
         if (p == NULL) return;
         if (p->left == NULL && p->right == NULL)
         {
-            char b = 0;
             codes[p->myChar].isActive = true;
-            for (size_t i = 0; i < path.size(); i++) b = (b << 1) | path.at(i);
-            codes[p->myChar].myCode = b;
-            codes[p->myChar].myPadding = 8 - path.size();
+            codes[p->myChar].myCode = path;
         }
         createCodes(p->left,path.append("0"));
         path.pop_back();
@@ -199,11 +190,11 @@ class huffTree{
             return true;
         }
         void resetBuf(){buf = 0; ctr = 0;}
-        
+
         public:
         writeModule(string filename)
         {
-            file = ofstream(filename+".huf", ios::out | ios::binary); 
+            file = ofstream(filename+".huf", ios::out | ios::binary);
             resetBuf();
         }
         ~writeModule()
@@ -233,42 +224,48 @@ class huffTree{
     };
     class readModule
     {
-    private:
+        private:
         ifstream *file;
-        char buf;
+        char workingBuf;
         int remBits;
+        bool isLast;
 
-    public:
-        readModule(ifstream *f, int &padding)
+        public:
+        int padding;
+        readModule(ifstream *filename)
         {
-            file = f;
-            buf = 0;
+            workingBuf = 0;
             remBits = 0;
-
-            char c;
-            file->get(c);
-            padding = (int)c;
+            char pd;
+            file = filename;
+            if (!file->get(pd) || (pd < 0 || pd > 7)) padding = -1;
+            else padding = pd;
+            isLast = false;
         }
+
         int readBit()
         {
             if (remBits == 0)
             {
-                file->get(buf);
+                if (!file->get(workingBuf)) return -1;
+                isLast = (file->peek() == EOF);
                 remBits = 8;
             }
-            remBits--;
-            return (buf >> remBits) & 1;
-        }
-        char readByte()
-        {
-            char c = 0;
-            for (int i = 0; i < 8; i++)
+            if (isLast && padding != 0 && remBits == 8 - padding) return -1;
+            else
             {
+                remBits--;
+                return (static_cast<unsigned char>(workingBuf) >> remBits) & 1;
+            }
+        }
+        char readByte() {
+            char val = 0;
+            for (int i = 0; i < 8; i++) {
                 int b = readBit();
                 if (b == -1) break;
-                c = (c << 1) | b;
+                val = (val << 1) | b;
             }
-            return c;
+            return val;
         }
     };
     //========[IO FUNCTIONS]=======================
@@ -303,7 +300,7 @@ class huffTree{
         }
 
         char ch;
-        while (plaintext.get(ch)) for (size_t i = codes[ch].myPadding; i < 8; i++) io.writeBit((codes[ch].myCode >> i) & 1);
+        while (plaintext.get(ch)) for (size_t i = 0; i < codes[ch].myCode.size(); i++) io.writeBit(codes[ch].myCode.at(i)-'0');
 
         plaintext.close();
 
@@ -314,12 +311,13 @@ class huffTree{
         int bit = io.readBit();
         if (bit == -1) return NULL;
 
-        if (bit == 1) {
-            // Leaf node: read the next 8 bits as the original character
-            unsigned char ch = io.readByte();
+        if (bit == 1)
+        {
+            char ch = io.readByte();
             return new huffNode(0, ch);
-        } else {
-            // Internal node: recursively build left and right subtrees
+        }
+        else
+        {
             huffNode* node = new huffNode(0);
             node->left = retrieveTree(io);
             node->right = retrieveTree(io);
@@ -328,35 +326,35 @@ class huffTree{
     }
     bool decodeFile(string filename)
     {
-        ifstream file(filename);
-        int padding;
+        ifstream file(filename, ios::in | ios::binary);
         if (!file.is_open())
         {
             printf("File not found.\n");
             return false;
         }
+        readModule io = readModule(&file);
 
-        readModule io = readModule(&file, padding);
         decodedtree = retrieveTree(io);
+
         while (true)
         {
-            int bit;
             huffNode *p = decodedtree;
+            int bit;
             while (true)
             {
+                if (p->left == NULL && p->right == NULL) break;
                 bit = io.readBit();
                 if (bit == -1) break;
-                (bit == 0) ? p = p->left : p->right;
-                if (p->left == NULL && p->right == NULL) break;
+                if (bit == 0) p = p->left;
+                else p = p->right;
             }
             if (bit == -1) break;
             cout<<p->myChar;
         }
-        file.close();
         return true;
     }
     //========[CLASS ATTRIBUTES]===================
-    char map[255] = {0};
+    unsigned char map[255] = {0};
     codeNode codes[255];
     pQueue *treeQueue;
     huffNode *tree;
@@ -392,9 +390,9 @@ class huffTree{
         {
             if (i > 256) break;
             if (!codes[i].isActive) continue;
-            else cout<<char(i)<<": "<<codes[i].myPadding<<endl;
+            else cout<<char(i)<<": "<<codes[i].myCode<<endl;
         }
-        
+
         return;
     }
     void encodeText()
@@ -415,9 +413,10 @@ class huffTree{
 
 int main(int argc, char const *argv[])
 {
-    huffTree tree = huffTree("plaintext.txt");
+    huffTree tree = huffTree("lorem.txt");
     tree.displayTree();
     tree.displayCodes();
+    tree.encodeText();
     tree.decodeText();
     return 0;
 }

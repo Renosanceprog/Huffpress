@@ -9,3 +9,4 @@ treesanitycheck.cpp
 test.huf
 ProjectHuffman.cpp
 *.huf
+*.todo
