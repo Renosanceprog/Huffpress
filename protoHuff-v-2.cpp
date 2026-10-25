@@ -414,9 +414,9 @@ class huffTree{
 int main(int argc, char const *argv[])
 {
     huffTree tree = huffTree("lorem.txt");
-    tree.displayTree();
-    tree.displayCodes();
-    tree.encodeText();
+    //tree.displayTree();
+    //tree.displayCodes();
+    //tree.encodeText();
     tree.decodeText();
     return 0;
 }

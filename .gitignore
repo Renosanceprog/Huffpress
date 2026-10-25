@@ -10,3 +10,4 @@ test.huf
 ProjectHuffman.cpp
 *.huf
 *.todo
+Splits/finalSkeleton.cpp
