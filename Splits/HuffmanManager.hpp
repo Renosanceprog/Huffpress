@@ -10,8 +10,9 @@ private:
     string activeHuf;
     bool txtLoaded;
     bool hufLoaded;
-    bool pairVerified;
     HuffmanTree *currentTree;
+    IntegrityStatus integrityStatus; // or a dedicated enum state
+    bool isChecked;
 
 public:
     HuffmanManager()
@@ -20,14 +21,16 @@ public:
         activeHuf = "";
         txtLoaded = false;
         hufLoaded = false;
-        pairVerified = false;
         currentTree = NULL;
+        integrityStatus = ERROR_FILE_NOT_FOUND;
+        isChecked = false;
     };
 
     // State getters for UI locking
     bool isTxtLoaded(){ return txtLoaded; }
     bool isHufLoaded(){ return hufLoaded; }
-    bool isPairVerified(){ return pairVerified; }
+    bool isPairChecked(){ return isChecked; }
+    IntegrityStatus getLastResult() { return integrityStatus; }
     string getTxtFilename(){ return activeTxt; }
     string getHufFilename(){ return activeHuf; }
 
@@ -134,5 +137,41 @@ public:
         DecoderModule app;
         return app.decodeFileAndSave(".\\Compressed\\"+activeHuf+".huf",fmtOutName);
     }
-    bool runIntegrityCheck(){return false;}
+
+    void verifyPairs()
+    {
+        if (!(isTxtLoaded() && isHufLoaded())) {
+            isChecked = false;
+            return;
+        }
+        DecoderModule app;
+        integrityStatus = app.verifyStreamIntegrity(".\\Plaintexts\\"+activeTxt+".txt",".\\Compressed\\"+activeHuf+".huf");
+        isChecked = true;
+    }
+
+    void getCompressionStats(unsigned long &origSize, unsigned long &compSize, double &savingsPercent)
+    {
+        string txtPath = ".\\Plaintexts\\" + activeTxt + ".txt";
+        string hufPath = ".\\Compressed\\" + activeHuf + ".huf";
+
+        ifstream txtFile(txtPath, ios::binary | ios::ate);
+        if (!txtFile.is_open()) return;
+        origSize = txtFile.tellg();
+        txtFile.close();
+
+        ifstream hufFile(hufPath, ios::binary | ios::ate);
+        if (!hufFile.is_open()) return;
+        compSize = hufFile.tellg();
+        hufFile.close();
+
+
+        if (origSize == 0) savingsPercent = 0.0;
+        else savingsPercent = (1.0 - (double)compSize / (double)origSize) * 100.0;
+    }
+
+    IntegrityReport runIntegrityReport()
+    {
+        DecoderModule app;
+        return app.runDetailedDiagnostics(".\\Plaintexts\\" + activeTxt + ".txt",".\\Compressed\\" + activeHuf + ".huf");
+    }
 };
