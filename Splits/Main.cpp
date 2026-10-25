@@ -147,8 +147,10 @@ int main()
                     cout<<" Ratio:              " << (double)orig / (comp > 0 ? comp : 1) << ":1"<<endl;
                     cout<<"========================================"<<endl;
                     break;
-    case 10: {
-        if (!(app.isTxtLoaded() && app.isHufLoaded())) {
+    case 10:
+    {
+        if (!(app.isTxtLoaded() && app.isHufLoaded()))
+        {
             cout<<"[Error] Load both files first."<<endl;
             break;
         }
@@ -159,23 +161,26 @@ int main()
         
         IntegrityReport rep = app.runIntegrityReport();
 
-        if (rep.status == MATCH_OK) {
+        if (rep.status == MATCH_OK)
+        {
             cout<<" [PASSED] 100% Lossless Match Verified!"<<endl;
             cout<<"----------------------------------------"<<endl;
             cout<<" Bytes Successfully Decoded: " << rep.totalBytesVerified << " bytes"<<endl;
             cout<<" Total Bits Parsed Stream:   " << rep.totalBitsProcessed << " bits"<<endl;
             cout<<" Structural Integrity:       PASS (0 Mismatches)"<<endl;
-        } else {
+        }
+        else
+        {
             cout<<" [FAILED] Integrity Check Failed!"<<endl;
             cout<<"----------------------------------------"<<endl;
             cout<<" Error Code:                 " << rep.status << ""<<endl;
             cout<<" Failed at Byte Index:       " << rep.mismatchIndex << ""<<endl;
-            if (rep.status == ERROR_BYTE_MISMATCH) {
+            if (rep.status == ERROR_BYTE_MISMATCH)
+            {
                 cout<<" Expected Character:         '" << rep.expectedChar << "' (ASCII " << (int)rep.expectedChar << ")"<<endl;
                 cout<<" Decoded Character:          '" << rep.actualChar << "' (ASCII " << (int)rep.actualChar << ")"<<endl;
-            } else if (rep.status == ERROR_LENGTH_MISMATCH) {
-                cout<<" Reason:                     Stream lengths diverged (premature EOF)."<<endl;
             }
+            else if (rep.status == ERROR_LENGTH_MISMATCH) cout<<" Reason:                     Stream lengths diverged (premature EOF)."<<endl;
         }
         cout<<"========================================"<<endl;
         break;
