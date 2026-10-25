@@ -4,6 +4,17 @@
 
 using namespace std;
 
+#define RESET   "\033[0m"
+#define RED     "\033[31m"
+#define GREEN   "\033[32m"
+#define YELLOW  "\033[33m"
+#define BLUE    "\033[34m"
+#define MAGENTA "\033[35m"
+#define CYAN    "\033[36m"
+#define WHITE   "\033[37m"
+#define BOLD    "\033[1m"
+#define GRAY    "\033[90m"
+
 string getStatusString(bool txt, bool huf, bool checked, IntegrityStatus res)
 {
     if (!txt || !huf) return "Pending (Load both files)";
@@ -20,46 +31,69 @@ string getStatusString(bool txt, bool huf, bool checked, IntegrityStatus res)
 int displayMenu(HuffmanManager app)
 {
     int choice;
-    cout<<"\033[H\033[2J";
-    cout<<"========================================"<<endl;
-    cout<<"   Huffpress! - Encode & Decode Suite   "<<endl;
-    cout<<"========================================"<<endl;
-    cout<<" Active .txt: " << (app.isTxtLoaded() ? app.getTxtFilename()+".txt" : "[None]")<<endl;
-    cout<<" Active .huf: " << (app.isHufLoaded() ? app.getHufFilename()+".huf" : "[None]")<<endl;
-    cout << " Status:      " << getStatusString(app.isTxtLoaded(), app.isHufLoaded(), app.isPairChecked(), app.getLastResult()) << endl;
-    cout<<"----------------------------------------"<<endl;
-    cout<<" [1] Load Plaintext (.txt)"<<endl;
-    cout<<" [2] Load Compressed (.huf)"<<endl;
-    cout<<"----------------------------------------"<<endl;
-    cout<<"   Payload / Content  Preview & Stats   "<<endl;
-    cout<<"----------------------------------------"<<endl;
-    if (!(app.isTxtLoaded() || app.isHufLoaded())) cout<<"\e[0;38;5;240m";
-        cout<<" [3] Read Loaded Text (Inspect in RAM)"<<endl;
-        cout<<" [4] Run Character Frequency Analysis"<<endl;
-        cout<<" [5] View Huffman Tree"<<endl;
-        cout<<" [6] View Generated Codes";
-        cout<<"\x1b[0;39m"<<endl;
-    cout<<"----------------------------------------"<<endl;
-    cout<<"          Save As  .txt / .huf          "<<endl;
-    cout<<"----------------------------------------"<<endl;
-    if (!app.isTxtLoaded()) cout<<"\e[0;38;5;240m";
-    cout<<" [7] Compress File (Load .txt first)";
-    cout<<"\x1b[0;39m"<<endl;
-    if (!app.isHufLoaded()) cout<<"\e[0;38;5;240m";
-    cout<<" [8] Decompress File (Load .huf first)";
-    cout<<"\x1b[0;39m"<<endl;
-    cout<<"----------------------------------------"<<endl;
-    cout<<"Stastistics & Integrity  (Requires both)"<<endl;
-    cout<<"----------------------------------------"<<endl;
-    if (!(app.isTxtLoaded() && app.isHufLoaded())) cout<<"\e[0;38;5;240m";
-    cout<<" [9]  View Compression Ratio & Stats"<<endl;
-    cout<<" [10] Run Content Integrity Check";
-    cout<<"\x1b[0;39m"<<endl;
-    cout<<"----------------------------------------"<<endl;
-    cout<<" [0] Exit"<<endl;
-    cout<<"========================================"<<endl;
-    cout<<"Enter choice: ";
-    cin>>choice;
+    cout << "\033[H\033[2J";
+
+    cout << CYAN << BOLD;
+    cout << "========================================" << endl;
+    cout << "   Huffpress! - Encode & Decode Suite   " << endl;
+    cout << "========================================" << RESET << endl;
+
+    cout << WHITE << " Active .txt: " << RESET
+         << (app.isTxtLoaded() ? GREEN + app.getTxtFilename() + ".txt" + RESET : GRAY "[None]" RESET) << endl;
+
+    cout << WHITE << " Active .huf: " << RESET
+         << (app.isHufLoaded() ? GREEN + app.getHufFilename() + ".huf" + RESET : GRAY "[None]" RESET) << endl;
+
+    cout << WHITE << " Status:      " << RESET
+         << getStatusString(app.isTxtLoaded(), app.isHufLoaded(), app.isPairChecked(), app.getLastResult()) << endl;
+
+    cout << BLUE << "----------------------------------------" << RESET << endl;
+    cout << YELLOW << BOLD << " [1] " << RESET << "Load Plaintext (.txt)" << endl;
+    cout << YELLOW << BOLD << " [2] " << RESET << "Load Compressed (.huf)" << endl;
+
+    cout << BLUE << "----------------------------------------" << RESET << endl;
+    cout << CYAN << BOLD << "   Payload / Content Preview & Stats    " << RESET << endl;
+    cout << BLUE << "----------------------------------------" << RESET << endl;
+
+    if (!(app.isTxtLoaded() || app.isHufLoaded())) cout << GRAY;
+    cout << " [3] Read Loaded Text (Inspect in RAM)" << RESET << endl;
+    if (!(app.isTxtLoaded() || app.isHufLoaded())) cout << GRAY;
+    cout << " [4] Run Character Frequency Analysis" << RESET << endl;
+    if (!(app.isTxtLoaded() || app.isHufLoaded())) cout << GRAY;
+    cout << " [5] View Huffman Tree" << RESET << endl;
+    if (!(app.isTxtLoaded() || app.isHufLoaded())) cout << GRAY;
+    cout << " [6] View Generated Codes" << RESET << endl;
+
+    cout << BLUE << "----------------------------------------" << RESET << endl;
+    cout << CYAN << BOLD << "          Save As .txt / .huf           " << RESET << endl;
+    cout << BLUE << "----------------------------------------" << RESET << endl;
+
+    if (!app.isTxtLoaded()) cout << GRAY;
+    else cout << GREEN;
+    cout << " [7] Compress File (Load .txt first)" << RESET << endl;
+
+    if (!app.isHufLoaded()) cout << GRAY;
+    else cout << GREEN;
+    cout << " [8] Decompress File (Load .huf first)" << RESET << endl;
+
+    cout << BLUE << "----------------------------------------" << RESET << endl;
+    cout << CYAN << BOLD << "      Statistics & Integrity            " << RESET << endl;
+    cout << BLUE << "----------------------------------------" << RESET << endl;
+
+    if (!(app.isTxtLoaded() && app.isHufLoaded())) cout << GRAY;
+    else cout << MAGENTA;
+    cout << " [9]  View Compression Ratio & Stats" << RESET << endl;
+
+    if (!(app.isTxtLoaded() && app.isHufLoaded())) cout << GRAY;
+    else cout << MAGENTA;
+    cout << " [10] Run Content Integrity Check" << RESET << endl;
+
+    cout << BLUE << "----------------------------------------" << RESET << endl;
+    cout << RED << BOLD << " [0] Exit" << RESET << endl;
+    cout << BLUE << "========================================" << RESET << endl;
+
+    cout << CYAN << BOLD << "Enter choice: " << RESET;
+    cin >> choice;
     return choice;
 }
 
@@ -69,28 +103,45 @@ int main()
     string field;
     int choice;
     int opt;
+
     while (true)
     {
         app.verifyPairs();
         choice = displayMenu(app);
+
         switch (choice)
         {
         case 1:
         case 2:
-            cout<<"Enter the "<<((choice == 1) ? ".txt" : ".huf")<<" filename (Ensure it is in "<<((choice == 1) ? "./Plaintexts/" : "./Compressed/")<<"): ";
-            cin>>field;
-            if ((choice == 1) ? app.loadPlaintext(field) : app.loadCompressed(field)) printf("Succesfully loaded %s!\n", field.c_str());
-            else printf("Failed to load %s! check if file exists in respective directory.\n", field.c_str());
+            cout << CYAN << "Enter the "
+                 << ((choice == 1) ? ".txt" : ".huf")
+                 << " filename (Ensure it is in "
+                 << ((choice == 1) ? "./Plaintexts/" : "./Compressed/")
+                 << "): " << RESET;
+
+            cin >> field;
+
+            if ((choice == 1) ? app.loadPlaintext(field) : app.loadCompressed(field))
+                printf(GREEN "Successfully loaded %s!\n" RESET, field.c_str());
+            else
+                printf(RED "Failed to load %s! Check if file exists in respective directory.\n" RESET, field.c_str());
+
             break;
+
         case 3:
         case 4:
         case 5:
         case 6:
             bool isPlain;
+
             if (app.isTxtLoaded() && app.isHufLoaded())
             {
-                cout<<"Display for loaded .txt or .huf?\n[1] .txt\n[2] .huf\nEnter Option: ";
-                cin>>opt;
+                cout << YELLOW << "Display for loaded .txt or .huf?\n"
+                     << "[1] .txt\n"
+                     << "[2] .huf\n"
+                     << "Enter Option: " << RESET;
+                cin >> opt;
+
                 if (opt == 1) isPlain = true;
                 else if (opt == 2) isPlain = false;
                 else goto invalid;
@@ -98,105 +149,146 @@ int main()
             else if (app.isTxtLoaded()) isPlain = true;
             else if (app.isHufLoaded()) isPlain = false;
             else continue;
-            cout<<"\033[H\033[2J";
-            cout<<"----------------------------------------"<<endl;
-            cout<<"         Displaying  Statistics         "<<endl;
-            cout<<"----------------------------------------"<<endl;
+
+            cout << "\033[H\033[2J";
+            cout << BLUE << "----------------------------------------" << endl;
+            cout << CYAN << BOLD << "         Displaying Statistics          " << RESET << endl;
+            cout << BLUE << "----------------------------------------" << RESET << endl;
+
             switch (choice)
             {
             case 3:
                 app.displayText(isPlain);
                 break;
+
             case 4:
                 app.displayFrequencies(isPlain);
-                break; 
+                break;
+
             case 5:
                 app.displayTree(isPlain);
                 break;
+
             case 6:
                 app.displayCodes(isPlain);
                 break;
             }
-            cout<<"----------------------------------------"<<endl;
+
+            cout << BLUE << "----------------------------------------" << RESET << endl;
             break;
+
         case 7:
         case 8:
-            cout<<"Enter the "<<((choice == 7) ? "compressed" : "plaintext")<<" filename (type NONE to use source filename): ";
-            cin>>field;
+            cout << CYAN << "Enter the "
+                 << ((choice == 7) ? "compressed" : "plaintext")
+                 << " filename (type NONE to use source filename): "
+                 << RESET;
+
+            cin >> field;
+
             (choice == 7) ? app.executeCompression(field) : app.executeDecompression(field);
-            cout<<"------------------------------------------------"<<endl;
-            cout<<"Succesfully Saved file. Check respective Folder."<<endl;
-            cout<<"------------------------------------------------"<<endl;
+
+            cout << GREEN << "------------------------------------------------" << endl;
+            cout << "Successfully Saved file. Check respective Folder." << endl;
+            cout << "------------------------------------------------" << RESET << endl;
             break;
+
         case 9:
-                    if (!(app.isTxtLoaded() && app.isHufLoaded()))
-                    {
-                        cout << "[Error] Load both files first.\n";
-                        break;
-                    }
-                    unsigned long orig, comp;
-                    double savings;
-                    app.getCompressionStats(orig, comp, savings);
-                    
-                    cout<<"\n========================================"<<endl;
-                    cout<<"       COMPRESSION STATISTICS REPORT    "<<endl;
-                    cout<<"========================================"<<endl;
-                    cout<<" Original Size:      " << orig << " bytes"<<endl;
-                    cout<<" Compressed Size:    " << comp << " bytes"<<endl;
-                    cout<<" Space Saved:        " << savings << "%"<<endl;
-                    cout<<" Ratio:              " << (double)orig / (comp > 0 ? comp : 1) << ":1"<<endl;
-                    cout<<"========================================"<<endl;
-                    break;
-    case 10:
-    {
-        if (!(app.isTxtLoaded() && app.isHufLoaded()))
+            if (!(app.isTxtLoaded() && app.isHufLoaded()))
+            {
+                cout << RED << "[Error] Load both files first.\n" << RESET;
+                break;
+            }
+
+            unsigned long orig, comp;
+            double savings;
+
+            app.getCompressionStats(orig, comp, savings);
+
+            cout << MAGENTA << "\n========================================" << endl;
+            cout << BOLD << "       COMPRESSION STATISTICS REPORT    " << RESET << endl;
+            cout << MAGENTA << "========================================" << RESET << endl;
+
+            cout << WHITE << " Original Size:      " << CYAN << orig << " bytes" << endl;
+            cout << WHITE << " Compressed Size:    " << CYAN << comp << " bytes" << endl;
+            cout << WHITE << " Space Saved:        " << GREEN << savings << "%" << endl;
+            cout << WHITE << " Ratio:              " << YELLOW
+                 << (double)orig / (comp > 0 ? comp : 1) << ":1" << endl;
+
+            cout << MAGENTA << "========================================" << RESET << endl;
+            break;
+
+        case 10:
         {
-            cout<<"[Error] Load both files first."<<endl;
+            if (!(app.isTxtLoaded() && app.isHufLoaded()))
+            {
+                cout << RED << "[Error] Load both files first." << RESET << endl;
+                break;
+            }
+
+            cout << MAGENTA << "\n========================================" << endl;
+            cout << BOLD << "       STREAM INTEGRITY DIAGNOSTIC      " << RESET << endl;
+            cout << MAGENTA << "========================================" << RESET << endl;
+
+            IntegrityReport rep = app.runIntegrityReport();
+
+            if (rep.status == MATCH_OK)
+            {
+                cout << GREEN << " [PASSED] 100% Lossless Match Verified!" << RESET << endl;
+                cout << GREEN << "----------------------------------------" << RESET << endl;
+                cout << WHITE << " Bytes Successfully Decoded: " << GREEN
+                     << rep.totalBytesVerified << " bytes" << endl;
+                cout << WHITE << " Total Bits Parsed Stream:   " << GREEN
+                     << rep.totalBitsProcessed << " bits" << endl;
+                cout << WHITE << " Structural Integrity:       " << GREEN
+                     << "PASS (0 Mismatches)" << RESET << endl;
+            }
+            else
+            {
+                cout << RED << " [FAILED] Integrity Check Failed!" << RESET << endl;
+                cout << RED << "----------------------------------------" << RESET << endl;
+                cout << WHITE << " Error Code:                 " << RED
+                     << rep.status << RESET << endl;
+                cout << WHITE << " Failed at Byte Index:       " << RED
+                     << rep.mismatchIndex << RESET << endl;
+
+                if (rep.status == ERROR_BYTE_MISMATCH)
+                {
+                    cout << WHITE << " Expected Character:         " << YELLOW
+                         << "'" << rep.expectedChar << "' (ASCII "
+                         << (int)rep.expectedChar << ")" << RESET << endl;
+
+                    cout << WHITE << " Decoded Character:          " << YELLOW
+                         << "'" << rep.actualChar << "' (ASCII "
+                         << (int)rep.actualChar << ")" << RESET << endl;
+                }
+                else if (rep.status == ERROR_LENGTH_MISMATCH)
+                {
+                    cout << YELLOW
+                         << " Reason: Stream lengths diverged (premature EOF)."
+                         << RESET << endl;
+                }
+            }
+
+            cout << MAGENTA << "========================================" << RESET << endl;
             break;
         }
 
-        cout<<"\n========================================"<<endl;
-        cout<<"       STREAM INTEGRITY DIAGNOSTIC      "<<endl;
-        cout<<"========================================"<<endl;
-        
-        IntegrityReport rep = app.runIntegrityReport();
-
-        if (rep.status == MATCH_OK)
-        {
-            cout<<" [PASSED] 100% Lossless Match Verified!"<<endl;
-            cout<<"----------------------------------------"<<endl;
-            cout<<" Bytes Successfully Decoded: " << rep.totalBytesVerified << " bytes"<<endl;
-            cout<<" Total Bits Parsed Stream:   " << rep.totalBitsProcessed << " bits"<<endl;
-            cout<<" Structural Integrity:       PASS (0 Mismatches)"<<endl;
-        }
-        else
-        {
-            cout<<" [FAILED] Integrity Check Failed!"<<endl;
-            cout<<"----------------------------------------"<<endl;
-            cout<<" Error Code:                 " << rep.status << ""<<endl;
-            cout<<" Failed at Byte Index:       " << rep.mismatchIndex << ""<<endl;
-            if (rep.status == ERROR_BYTE_MISMATCH)
-            {
-                cout<<" Expected Character:         '" << rep.expectedChar << "' (ASCII " << (int)rep.expectedChar << ")"<<endl;
-                cout<<" Decoded Character:          '" << rep.actualChar << "' (ASCII " << (int)rep.actualChar << ")"<<endl;
-            }
-            else if (rep.status == ERROR_LENGTH_MISMATCH) cout<<" Reason:                     Stream lengths diverged (premature EOF)."<<endl;
-        }
-        cout<<"========================================"<<endl;
-        break;
-    }
         case 0:
             goto exit_menu;
             break;
+
         default:
-            invalid:
-            cout<<"invalid input! please pick from valid options..."<<endl;
+        invalid:
+            cout << RED << "Invalid input! Please pick from valid options..." << RESET << endl;
             break;
         }
+
         cin.ignore();
         cin.get();
     }
-    exit_menu:
-    cout<<"Happy Coding! exiting program..."<<endl;
+
+exit_menu:
+    cout << GREEN << "Happy Coding! Exiting program..." << RESET << endl;
     return 0;
 }
