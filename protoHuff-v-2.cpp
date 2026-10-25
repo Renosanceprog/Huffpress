@@ -354,7 +354,7 @@ class huffTree{
         return true;
     }
     //========[CLASS ATTRIBUTES]===================
-    unsigned char map[255] = {0};
+    unsigned long map[255] = {0};
     codeNode codes[255];
     pQueue *treeQueue;
     huffNode *tree;
@@ -371,6 +371,7 @@ class huffTree{
         {
             createQueue();
             createTree();
+            createCodes(tree, "");
         }
         else return;
     }
@@ -416,7 +417,7 @@ int main(int argc, char const *argv[])
     huffTree tree = huffTree("lorem.txt");
     //tree.displayTree();
     //tree.displayCodes();
-    //tree.encodeText();
+    tree.encodeText();
     tree.decodeText();
     return 0;
 }

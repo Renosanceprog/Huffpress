@@ -96,7 +96,7 @@ class pQueue{
 
 class HuffmanTree {
 public:
-    unsigned char map[256];
+    unsigned long map[256] = {0};
     codeNode codes[256];
     pQueue *treeQueue;
     huffNode *tree;
@@ -111,6 +111,7 @@ public:
         {
             createQueue();
             createTree();
+            createCodes(tree,"");
         }
         else return;
     }
@@ -156,14 +157,70 @@ public:
         tree = treeQueue->dequeue();
     }
     
-    void displayTree(huffNode *p);
-    void displayCodes(huffNode *p, string path)
+    void printTreeRecursive(huffNode *node, string prefix, bool isLeft)
+    {
+        if (node == NULL) return;
+
+        cout << prefix;
+        cout << (isLeft ? "|-- " : "L__ ");
+
+        if (node->left == NULL && node->right == NULL)
+        {
+            cout << "['";
+            if (node->myChar == '\n') cout << "\\n";
+            else if (node->myChar == '\t') cout << "\\t";
+            else if (node->myChar == '\r') cout << "\\r";
+            else if (node->myChar == ' ') cout << "[space]";
+            else cout << node->myChar;
+            cout << "'] (freq: " << node->myFreq << ")\n";
+        }
+        else cout << "[*] (freq: " << node->myFreq << ")\n";
+
+        string nextPrefix = prefix + (isLeft ? "|   " : "    ");
+        printTreeRecursive(node->left, nextPrefix, true);
+        printTreeRecursive(node->right, nextPrefix, false);
+    }
+
+    void displayTree(huffNode *p)
+    {
+        if (p == NULL) return;
+
+        if (p->left == NULL && p->right == NULL)
+        {
+            cout << "['";
+            if (p->myChar == '\n') cout << "\\n";
+            else if (p->myChar == '\t') cout << "\\t";
+            else if (p->myChar == '\r') cout << "\\r";
+            else if (p->myChar == ' ') cout << "[space]";
+            else cout << p->myChar;
+            cout << "'] (freq: " << p->myFreq << ")\n";
+        }
+        else cout << "[*] (freq: " << p->myFreq << ")\n";
+
+        printTreeRecursive(p->left, "", true);
+        printTreeRecursive(p->right, "", false);
+    }
+
+    void displayFrequencies()
+    {
+        for (size_t i = 0; i < 256; i++)
+        {
+            if (map[i] == 0) continue;
+            if (i == '\n') cout<<"\\n: ";
+            else if (i == '\t') cout<<"\\t: ";
+            else if (i == '\r') cout<<"\\r: ";
+            else if (i == ' ') cout<<"[space]: ";
+            else cout<<(char)i<<": ";
+            cout<<map[i]<<endl;
+        }
+    }
+    void displayCodesRecursive(huffNode *p, string path)
     {
         if (p == NULL) return;
         if (p->left == NULL && p->right == NULL) cout<<p->myChar<<": "<<path<<endl;
-        displayCodes(p->left,path.append("0"));
+        displayCodesRecursive(p->left,path.append("0"));
         path.pop_back();
-        displayCodes(p->right,path.append("1"));
+        displayCodesRecursive(p->right,path.append("1"));
     }
 
     void createCodes(huffNode *p, string path)

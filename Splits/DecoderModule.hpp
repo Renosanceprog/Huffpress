@@ -9,7 +9,7 @@ class readModule
 {
     private:
     ifstream *file;
-    unsigned workingBuf;
+    unsigned char workingBuf;
     int remBits;
     bool isLast;
 
@@ -28,10 +28,11 @@ class readModule
 
     int readBit()
     {
-        char locbuf;
         if (remBits == 0)
         {
+            char locbuf;
             if (!file->get(locbuf)) return -1;
+            workingBuf = (unsigned char) locbuf;
             isLast = (file->peek() == EOF);
             remBits = 8;
         }
@@ -39,7 +40,6 @@ class readModule
         else
         {
             remBits--;
-            workingBuf = (unsigned char) locbuf;
             return (workingBuf >> remBits) & 1;
         }
     }
@@ -73,6 +73,7 @@ public:
             return node;
         }
     }
+
     bool decodeFileAndRead(string filename)
     {
         ifstream file(filename, ios::in | ios::binary);
@@ -102,6 +103,37 @@ public:
         }
         return true;
     }
-    static bool decodeFileAndSave(string compressedFilename, string outputPlaintextFilename);
+    bool decodeFileAndSave(string compressedFilename, string outputPlaintextFilename)
+    {
+        ifstream ifile(compressedFilename, ios::in | ios::binary);
+        if (!ifile.is_open())
+        {
+            printf("File not found.\n");
+            return false;
+        }
+        readModule io = readModule(&ifile);
+
+        huffNode *tree = retrieveTree(io);
+
+        ofstream ofile(outputPlaintextFilename);
+
+        while (true)
+        {
+            huffNode *p = tree;
+            int bit;
+            while (true)
+            {
+                if (p->left == NULL && p->right == NULL) break;
+                bit = io.readBit();
+                if (bit == -1) break;
+                if (bit == 0) p = p->left;
+                else p = p->right;
+            }
+            if (bit == -1) break;
+            ofile.put(p->myChar);
+        }
+        ofile.close();
+        return true;
+    }
     static bool verifyStreamIntegrity(string originalTxt, string compressedHuf);
 };

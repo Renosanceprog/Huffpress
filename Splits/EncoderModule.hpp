@@ -30,7 +30,7 @@ class writeModule
     public:
     writeModule(string filename)
     {
-        file = ofstream(filename+".huf", ios::out | ios::binary);
+        file = ofstream(filename, ios::out | ios::binary);
         resetBuf();
     }
     ~writeModule()
