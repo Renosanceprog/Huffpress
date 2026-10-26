@@ -11,22 +11,27 @@ using namespace std;
 struct huffNode
 {
     unsigned char myChar;
-    unsigned long myFreq;
+    unsigned long long myFreq;
     huffNode *left;
     huffNode *right;
-    huffNode(int frq, unsigned char c)
+    huffNode(unsigned long long frq, unsigned char c)
     {
         myFreq = frq;
         myChar = c;
         left = NULL;
         right = NULL;
     }
-    huffNode(int frq)
+    huffNode(unsigned long long frq)
     {
         myFreq = frq;
         myChar = '\0';
         left = NULL;
         right = NULL;
+    }
+    ~huffNode()
+    {
+        delete left;
+        delete right;
     }
 };
 //--------[SIMPLE STRUCT FOR CODE MAP]----------------------------
@@ -111,11 +116,12 @@ double mySqrt(double val)
 class HuffmanTree
 {
 public:
-    unsigned long map[256] = {0};
+    unsigned long long map[256] = {0};
     codeNode codes[256];
     pQueue *treeQueue;
     huffNode *tree;
     string fname;
+    unsigned long long totalChars;
 
     HuffmanTree(string filename)
     {
@@ -131,6 +137,12 @@ public:
         else return;
     }
 
+    ~HuffmanTree()
+    {
+        delete tree;
+        delete treeQueue;
+    }
+
     bool createOccurenceMap()
     {
         ifstream file(fname, ios::in | ios::binary);
@@ -141,7 +153,7 @@ public:
         }
 
         char ch;
-        while (file.get(ch)) map[(unsigned char)ch]++;
+        while (file.get(ch)) {map[(unsigned char)ch]++; totalChars++;}
 
         file.close();
         return true;
@@ -159,6 +171,16 @@ public:
 
     void createTree()
     {
+        if (treeQueue->count() == 0) return;
+
+        if (treeQueue->count() == 1)
+        {
+            huffNode *single = treeQueue->dequeue();
+            tree = new huffNode(single->myFreq);
+            tree->left = single;
+            return;
+        }
+
         while (treeQueue->count() != 1)
         {
             huffNode *l = treeQueue->dequeue();
@@ -170,6 +192,18 @@ public:
             treeQueue->enqueue(newnode);
         }
         tree = treeQueue->dequeue();
+    }
+
+    void createCodes(huffNode *p, string path)
+    {
+        if (p == NULL) return;
+        if (p->left == NULL && p->right == NULL)
+        {
+            codes[p->myChar].isActive = true;
+            codes[p->myChar].myCode = path.empty() ? "0" : path;
+        }
+        createCodes(p->left,path+"0");
+        createCodes(p->right,path+"1");
     }
 
     void printHeatmappedText()
@@ -292,19 +326,6 @@ public:
         path.pop_back();
         displayCodesRecursive(p->right,path.append("1"));
     }
-
-    void createCodes(huffNode *p, string path)
-    {
-        if (p == NULL) return;
-        if (p->left == NULL && p->right == NULL)
-        {
-            codes[p->myChar].isActive = true;
-            codes[p->myChar].myCode = path;
-        }
-        createCodes(p->left,path.append("0"));
-        path.pop_back();
-        createCodes(p->right,path.append("1"));
-    }
 };
 //================================================================
 //=======[ENCODING FUNCTIONS AND MODELS]==========================
@@ -359,8 +380,6 @@ class writeModule
     {
         int padding = ctr;
         for (size_t i = 0; i < 8-padding; i++) writeBit(0);
-        file.seekp(0);
-        file.put(padding);
     }
 };
 //--------[FILE HUF ENCODING MODULE]----------------------------
@@ -381,23 +400,28 @@ public:
     }
     void compressFile(string plaintextFilename, string outputFilename, HuffmanTree &hTree)
     {
+        if (hTree.totalChars == 0) { cout<<"Error: File is empty."<<endl; return; }
+
         string treeHeader; generateTreeHeaderString(hTree.tree, treeHeader);
         writeModule io = writeModule(outputFilename);
-        fstream plaintext(plaintextFilename);
+        ifstream plaintext(plaintextFilename, ios::in | ios::binary);
+        
+        if (!plaintext.is_open()) { printf("Error opening plaintext for compression.\n"); return; }
 
-        io.writeByte(0);
+        char* countPtr = (char*)&hTree.totalChars;
+        for (size_t i = 0; i < sizeof(hTree.totalChars); i++) {
+            io.writeByte(countPtr[i]);
+        }
 
         for (size_t i = 0; i < treeHeader.length(); i++)
         {
-            int bit;
-            if (treeHeader.at(i) == '0') bit = 0;
-            else bit = 1;
+            int bit = (treeHeader.at(i) == '0') ? 0 : 1;
             io.writeBit(bit);
             if (bit == 1) { io.writeByte(treeHeader.at(i+1)); i++; }
         }
 
         char ch;
-        while (plaintext.get(ch)) for (size_t i = 0; i < hTree.codes[ch].myCode.size(); i++) io.writeBit(hTree.codes[ch].myCode.at(i)-'0');
+        while (plaintext.get(ch)) for (size_t i = 0; i < hTree.codes[(unsigned char)ch].myCode.size(); i++) io.writeBit(hTree.codes[(unsigned char)ch].myCode.at(i)-'0');
 
         plaintext.close();
 
@@ -432,19 +456,15 @@ class readModule
     ifstream *file;
     unsigned char workingBuf;
     int remBits;
-    bool isLast;
 
     public:
-    int padding;
+    unsigned long long totalChars;
     readModule(ifstream *filename)
     {
         workingBuf = 0;
         remBits = 0;
-        char pd;
         file = filename;
-        if (!file->get(pd) || (pd < 0 || pd > 7)) padding = -1;
-        else padding = pd;
-        isLast = false;
+        file->read((char*)&totalChars, sizeof(totalChars));
     }
 
     int readBit()
@@ -454,15 +474,10 @@ class readModule
             char locbuf;
             if (!file->get(locbuf)) return -1;
             workingBuf = (unsigned char) locbuf;
-            isLast = (file->peek() == EOF);
             remBits = 8;
         }
-        if (isLast && padding != 0 && remBits == 8 - padding) return -1;
-        else
-        {
-            remBits--;
-            return (workingBuf >> remBits) & 1;
-        }
+        remBits--;
+        return (workingBuf >> remBits) & 1;
     }
     char readByte() {
         char val = 0;
@@ -475,9 +490,11 @@ class readModule
     }
 };
 //--------[HUF-ENCODED DECODER MODULE]----------------------------
-class DecoderModule {
+class DecoderModule
+{
 public:
-    huffNode* retrieveTree(readModule &io) {
+    huffNode* retrieveTree(readModule &io)
+    {
         int bit = io.readBit();
         if (bit == -1) return NULL;
 
@@ -495,36 +512,6 @@ public:
         }
     }
 
-    bool decodeFileAndRead(string filename)
-    {
-        ifstream file(filename, ios::in | ios::binary);
-        if (!file.is_open())
-        {
-            printf("File not found.\n");
-            return false;
-        }
-        readModule io = readModule(&file);
-
-        huffNode *tree = retrieveTree(io);
-
-        while (true)
-        {
-            huffNode *p = tree;
-            int bit;
-            while (true)
-            {
-                if (p->left == NULL && p->right == NULL) break;
-                bit = io.readBit();
-                if (bit == -1) break;
-                if (bit == 0) p = p->left;
-                else p = p->right;
-            }
-            if (bit == -1) break;
-            printf("\x1b[0;38;5;%dm%c",(int)p->myChar, p->myChar);
-        }
-        cout<<endl;
-        return true;
-    }
     bool decodeFileAndSave(string compressedFilename, string outputPlaintextFilename)
     {
         ifstream ifile(compressedFilename, ios::in | ios::binary);
@@ -537,9 +524,18 @@ public:
 
         huffNode *tree = retrieveTree(io);
 
-        ofstream ofile(outputPlaintextFilename);
+        if (!tree) { ifile.close(); return false; }
 
-        while (true)
+        ofstream ofile(outputPlaintextFilename, ios::out | ios::binary);
+        if (!ofile.is_open())
+        {
+            ifile.close();
+            delete tree;
+            return false;
+        }
+
+        unsigned long long decodedCount = 0;
+        while (decodedCount < io.totalChars)
         {
             huffNode *p = tree;
             int bit;
@@ -553,28 +549,31 @@ public:
             }
             if (bit == -1) break;
             ofile.put(p->myChar);
+            decodedCount++;
         }
         ofile.close();
+        ifile.close();
+        delete tree;
         return true;
     }
 
     IntegrityStatus verifyStreamIntegrity(string originalTxt, string compressedHuf)
     {
-        ifstream ofile(originalTxt);
+        ifstream ofile(originalTxt, ios::in | ios::binary);
         if (!ofile.is_open()) return ERROR_FILE_NOT_FOUND;
 
         ifstream cfile(compressedHuf, ios::in | ios::binary);
         if (!cfile.is_open()) return ERROR_FILE_NOT_FOUND;
 
         readModule io(&cfile);
-        if (io.padding == -1) return ERROR_BITSTREAM_CORRUPT;
 
         huffNode *tree = retrieveTree(io);
         if (tree == NULL) return ERROR_TREE_BUILD_FAILED;
 
-        while (true)
+        unsigned long long decodedCount = 0;
+        while (decodedCount < io.totalChars)
         {
-            char ch;
+            char raw_ch;
             huffNode *p = tree;
             int bit;
             
@@ -588,44 +587,46 @@ public:
             }
 
             bool hufFinished = (bit == -1);
-            bool txtFinished = !(ofile.get(ch));
+            bool txtFinished = !(ofile.get(raw_ch));
+            unsigned char ch = (unsigned char)raw_ch;
 
-            if (txtFinished && hufFinished) break;
-
-            // One file ended early
             if (txtFinished != hufFinished) return ERROR_LENGTH_MISMATCH;
 
-            // structural error mid-decoding
             if (p->left != NULL || p->right != NULL) return ERROR_BITSTREAM_CORRUPT;
 
-            // Byte Content Mismatch
             if (ch != p->myChar) return ERROR_BYTE_MISMATCH;
+
+            decodedCount++;
         }
 
+        char dummy;
+        if (ofile.get(dummy)) return ERROR_LENGTH_MISMATCH;
+
+        delete tree;
         return MATCH_OK;
     }
 
     IntegrityReport runDetailedDiagnostics(string originalTxt, string compressedHuf)
     {
         IntegrityReport report;
-        ifstream ofile(originalTxt);
+        ifstream ofile(originalTxt, ios::in | ios::binary);
         if (!ofile.is_open()) { report.status = ERROR_FILE_NOT_FOUND; return report; }
 
         ifstream cfile(compressedHuf, ios::in | ios::binary);
         if (!cfile.is_open()) { report.status = ERROR_FILE_NOT_FOUND; return report; }
 
         readModule io(&cfile);
-        if (io.padding == -1) { report.status = ERROR_BITSTREAM_CORRUPT; return report; }
 
         huffNode *tree = retrieveTree(io);
         if (tree == NULL) { report.status = ERROR_TREE_BUILD_FAILED; return report; }
 
         long byteIndex = 0;
         unsigned long bitsReadCount = 0;
+        unsigned long long decodedCount = 0;
 
-        while (true)
+        while (decodedCount < io.totalChars)
         {
-            char ch;
+            char raw_ch;
             huffNode *p = tree;
             int bit;
             
@@ -640,26 +641,23 @@ public:
             }
 
             bool hufFinished = (bit == -1);
-            bool txtFinished = !(ofile.get(ch));
-
-            if (txtFinished && hufFinished)
-            {
-                report.status = MATCH_OK;
-                break;
-            }
+            bool txtFinished = !(ofile.get(raw_ch));
+            unsigned char ch = (unsigned char)raw_ch;
 
             if (txtFinished != hufFinished)
             {
                 report.status = ERROR_LENGTH_MISMATCH;
                 report.mismatchIndex = byteIndex;
-                break;
+                delete tree;
+                return report;
             }
 
             if (p->left != NULL || p->right != NULL)
             {
                 report.status = ERROR_BITSTREAM_CORRUPT;
                 report.mismatchIndex = byteIndex;
-                break;
+                delete tree;
+                return report;
             }
 
             if (ch != p->myChar)
@@ -668,14 +666,27 @@ public:
                 report.mismatchIndex = byteIndex;
                 report.expectedChar = ch;
                 report.actualChar = p->myChar;
-                break;
+                delete tree;
+                return report;
             }
 
             byteIndex++;
+            decodedCount++;
             report.totalBytesVerified = byteIndex;
             report.totalBitsProcessed = bitsReadCount;
         }
 
+        char dummy;
+        if (ofile.get(dummy))
+        {
+            report.status = ERROR_LENGTH_MISMATCH;
+            report.mismatchIndex = byteIndex;
+            delete tree;
+            return report;
+        }
+
+        report.status = MATCH_OK;
+        delete tree;
         return report;
     }
 };
