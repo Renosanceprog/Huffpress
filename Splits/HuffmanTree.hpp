@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <cmath>
 
 using namespace std;
 
@@ -94,7 +95,19 @@ class pQueue{
     }
 };
 
-class HuffmanTree {
+double mySqrt(double val)
+    {
+        if (val <= 0) return 0;
+        double guess = val / 2.0;
+        if (guess == 0) guess = 1.0;
+        for (int i = 0; i < 8; ++i) {
+            guess = (guess + val / guess) / 2.0;
+        }
+        return guess;
+    }
+
+class HuffmanTree
+{
 public:
     unsigned long map[256] = {0};
     codeNode codes[256];
@@ -156,8 +169,52 @@ public:
         }
         tree = treeQueue->dequeue();
     }
-    
-void printTreeRecursive(huffNode *node, string prefix, bool isLeft)
+
+    void printHeatmappedText()
+    {
+        unsigned long maxFreq = 1;
+        char ch;
+        
+        for (int i = 0; i < 256; i++) if (i != ' ' && i != '\n' && i != '\r' && i != '\t' && map[i] > maxFreq) maxFreq = map[i];
+
+        double maxSqrt = mySqrt((double)maxFreq);
+        if (maxSqrt == 0) maxSqrt = 1.0;
+
+        ifstream file(fname);
+        while (file.get(ch))
+        {
+            unsigned char uc = (unsigned char)ch;
+            
+            if (uc == ' ' || uc == '\n' || uc == '\r' || uc == '\t') {
+                cout << ch;
+                continue;
+            }
+
+            int freq = map[uc];
+
+            double ratio = mySqrt((double)freq) / maxSqrt;
+            if (ratio > 1.0) ratio = 1.0;
+
+            int r = 0, g = 0, b = 0;
+            if (ratio < 0.25) {
+                r = 1; g = (int)((ratio / 0.25) * 4) + 1; b = 5;
+            } else if (ratio < 0.50) {
+                r = 1; g = 5; b = (int)((1.0 - (ratio - 0.25) / 0.25) * 4) + 1;
+            } else if (ratio < 0.75) {
+                r = (int)(((ratio - 0.50) / 0.25) * 4) + 1; g = 5; b = 1;
+            } else {
+                r = 5; g = (int)((1.0 - (ratio - 0.75) / 0.25) * 4) + 1; b = 1;
+            }
+
+            int ansiFgColor = 16 + (r * 36) + (g * 6) + b;
+
+            printf("\x1b[38;5;%dm%c", ansiFgColor, ch);
+        }
+        cout << "\x1b[0m" << endl;
+        file.close();
+    }
+
+    void printTreeRecursive(huffNode *node, string prefix, bool isLeft)
     {
         if (node == NULL) return;
 

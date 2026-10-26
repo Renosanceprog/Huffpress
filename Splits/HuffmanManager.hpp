@@ -65,17 +65,16 @@ public:
 
     void displayText(bool isPlain)
     {
-        if (isPlain)
-        {
-            ifstream file(".\\Plaintexts\\"+activeTxt+".txt");
-            string line;
-            while (getline(file, line)) cout<<line<<endl;
-            file.close();
-        }
+        if (isPlain) currentTree->printHeatmappedText();
         else
         {
             DecoderModule app;
-            app.decodeFileAndRead(".\\Compressed\\"+activeHuf+".huf");
+            string temploc = ".\\Compressed\\temp.txt";
+            app.decodeFileAndSave(".\\Compressed\\"+activeHuf+".huf",temploc);
+            HuffmanTree *temp = new HuffmanTree(temploc);
+            temp->printHeatmappedText();
+            delete temp;
+            remove(temploc.c_str());
         }
     }
     void displayFrequencies(bool isPlain)

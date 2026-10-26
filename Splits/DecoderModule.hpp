@@ -118,8 +118,9 @@ public:
                 else p = p->right;
             }
             if (bit == -1) break;
-            cout<<p->myChar;
+            printf("\x1b[0;38;5;%dm%c",(int)p->myChar, p->myChar);
         }
+        cout<<endl;
         return true;
     }
     bool decodeFileAndSave(string compressedFilename, string outputPlaintextFilename)
