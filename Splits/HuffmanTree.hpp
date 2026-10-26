@@ -157,26 +157,29 @@ public:
         tree = treeQueue->dequeue();
     }
     
-    void printTreeRecursive(huffNode *node, string prefix, bool isLeft)
+void printTreeRecursive(huffNode *node, string prefix, bool isLeft)
     {
         if (node == NULL) return;
 
-        cout << prefix;
-        cout << (isLeft ? "|-- " : "L__ ");
+        char left[4] = {(char)195,(char)196,(char)196,'\0'};
+        char right[4] = {(char)192,(char)196,(char)196,'\0'};
+        cout << "\033[90m" << prefix << "\033[0m";
+        cout << "\033[36m" << (isLeft ? left : right) << "\033[0m";
 
         if (node->left == NULL && node->right == NULL)
         {
-            cout << "['";
-            if (node->myChar == '\n') cout << "\\n";
-            else if (node->myChar == '\t') cout << "\\t";
-            else if (node->myChar == '\r') cout << "\\r";
-            else if (node->myChar == ' ') cout << "[space]";
-            else cout << node->myChar;
-            cout << "'] (freq: " << node->myFreq << ")\n";
+            cout << "\033[35m" << "['" << "\033[0m";
+            if (node->myChar == '\n') cout << "\033[33m" << "\\n" << "\033[0m";
+            else if (node->myChar == '\t') cout << "\033[33m" << "\\t" << "\033[0m";
+            else if (node->myChar == '\r') cout << "\033[33m" << "\\r" << "\033[0m";
+            else if (node->myChar == ' ') cout << "\033[33m" << "[space]" << "\033[0m";
+            else cout << "\033[32m" << node->myChar << "\033[0m";
+            cout << "\033[35m" << "']" << "\033[0m" << "\033[37m" << " (freq: " << "\033[33m" << node->myFreq << "\033[37m" << ")\033[0m\n";
         }
-        else cout << "[*] (freq: " << node->myFreq << ")\n";
+        else cout << "\033[33m" << "[*]" << "\033[37m" << " (freq: " << "\033[33m" << node->myFreq << "\033[37m" << ")\033[0m\n";
 
-        string nextPrefix = prefix + (isLeft ? "|   " : "    ");
+        char nextleft[4] = {(char)179,' ',' ','\0'};
+        string nextPrefix = prefix + "\033[36m" + (isLeft ? nextleft : "    ") + "\033[0m";
         printTreeRecursive(node->left, nextPrefix, true);
         printTreeRecursive(node->right, nextPrefix, false);
     }
@@ -187,15 +190,15 @@ public:
 
         if (p->left == NULL && p->right == NULL)
         {
-            cout << "['";
-            if (p->myChar == '\n') cout << "\\n";
-            else if (p->myChar == '\t') cout << "\\t";
-            else if (p->myChar == '\r') cout << "\\r";
-            else if (p->myChar == ' ') cout << "[space]";
-            else cout << p->myChar;
-            cout << "'] (freq: " << p->myFreq << ")\n";
+            cout << "\033[35m" << "['" << "\033[0m";
+            if (p->myChar == '\n') cout << "\033[33m" << "\\n" << "\033[0m";
+            else if (p->myChar == '\t') cout << "\033[33m" << "\\t" << "\033[0m";
+            else if (p->myChar == '\r') cout << "\033[33m" << "\\r" << "\033[0m";
+            else if (p->myChar == ' ') cout << "\033[33m" << "[space]" << "\033[0m";
+            else cout << "\033[32m" << p->myChar << "\033[0m";
+            cout << "\033[35m" << "']" << "\033[0m" << "\033[37m" << " (freq: " << "\033[33m" << p->myFreq << "\033[37m" << ")\033[0m\n";
         }
-        else cout << "[*] (freq: " << p->myFreq << ")\n";
+        else cout << "\033[33m" << "[*]" << "\033[37m" << " (freq: " << "\033[33m" << p->myFreq << "\033[37m" << ")\033[0m\n";
 
         printTreeRecursive(p->left, "", true);
         printTreeRecursive(p->right, "", false);

@@ -9,7 +9,7 @@ using namespace std;
 #define GREEN   "\033[32m"
 #define YELLOW  "\033[33m"
 #define BLUE    "\033[34m"
-#define MAGENTA "\033[35m"
+#define MAGENTA "\033[95m"
 #define CYAN    "\033[36m"
 #define WHITE   "\033[37m"
 #define BOLD    "\033[1m"
@@ -77,7 +77,7 @@ int displayMenu(HuffmanManager app)
     cout << " [8] Decompress File (Load .huf first)" << RESET << endl;
 
     cout << BLUE << "----------------------------------------" << RESET << endl;
-    cout << CYAN << BOLD << "      Statistics & Integrity            " << RESET << endl;
+    cout << CYAN << BOLD << "         Statistics & Integrity         " << RESET << endl;
     cout << BLUE << "----------------------------------------" << RESET << endl;
 
     if (!(app.isTxtLoaded() && app.isHufLoaded())) cout << GRAY;
