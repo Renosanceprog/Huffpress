@@ -277,7 +277,15 @@ public:
     void displayCodesRecursive(huffNode *p, string path)
     {
         if (p == NULL) return;
-        if (p->left == NULL && p->right == NULL) cout<<p->myChar<<": "<<path<<endl;
+        if (p->left == NULL && p->right == NULL) 
+        {
+            if (p->myChar == '\n') cout<<"\\n: ";
+            else if (p->myChar == '\t') cout<<"\\t: ";
+            else if (p->myChar == '\r') cout<<"\\r: ";
+            else if (p->myChar == ' ') cout<<"[space]: ";
+            else cout<<p->myChar;
+            cout<<": "<<path<<endl;
+        }
         displayCodesRecursive(p->left,path.append("0"));
         path.pop_back();
         displayCodesRecursive(p->right,path.append("1"));
