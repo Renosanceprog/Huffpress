@@ -9,22 +9,27 @@ using namespace std;
 struct huffNode
 {
     unsigned char myChar;
-    unsigned long myFreq;
+    unsigned long long myFreq;
     huffNode *left;
     huffNode *right;
-    huffNode(int frq, unsigned char c)
+    huffNode(unsigned long long frq, unsigned char c)
     {
         myFreq = frq;
         myChar = c;
         left = NULL;
         right = NULL;
     }
-    huffNode(int frq)
+    huffNode(unsigned long long frq)
     {
         myFreq = frq;
         myChar = '\0';
         left = NULL;
         right = NULL;
+    }
+    ~huffNode()
+    {
+        delete left;
+        delete right;
     }
 };
 
@@ -47,7 +52,6 @@ class pQueue{
             next = NULL;
         }
     };
-
 
     qNode *f;
     int ctr;
@@ -109,11 +113,12 @@ double mySqrt(double val)
 class HuffmanTree
 {
 public:
-    unsigned long map[256] = {0};
+    unsigned long long map[256] = {0};
     codeNode codes[256];
     pQueue *treeQueue;
     huffNode *tree;
     string fname;
+    unsigned long long totalChars;
 
     HuffmanTree(string filename)
     {
@@ -129,6 +134,12 @@ public:
         else return;
     }
 
+    ~HuffmanTree()
+    {
+        delete tree;
+        delete treeQueue;
+    }
+
     bool createOccurenceMap()
     {
         ifstream file(fname, ios::in | ios::binary);
@@ -139,7 +150,7 @@ public:
         }
 
         char ch;
-        while (file.get(ch)) map[(unsigned char)ch]++;
+        while (file.get(ch)) {map[(unsigned char)ch]++; totalChars++;}
 
         file.close();
         return true;
@@ -157,6 +168,16 @@ public:
 
     void createTree()
     {
+        if (treeQueue->count() == 0) return;
+
+        if (treeQueue->count() == 1)
+        {
+            huffNode *single = treeQueue->dequeue();
+            tree = new huffNode(single->myFreq);
+            tree->left = single;
+            return;
+        }
+
         while (treeQueue->count() != 1)
         {
             huffNode *l = treeQueue->dequeue();
@@ -168,6 +189,18 @@ public:
             treeQueue->enqueue(newnode);
         }
         tree = treeQueue->dequeue();
+    }
+
+    void createCodes(huffNode *p, string path)
+    {
+        if (p == NULL) return;
+        if (p->left == NULL && p->right == NULL)
+        {
+            codes[p->myChar].isActive = true;
+            codes[p->myChar].myCode = path.empty() ? "0" : path;
+        }
+        createCodes(p->left,path+"0");
+        createCodes(p->right,path+"1");
     }
 
     void printHeatmappedText()
@@ -291,16 +324,4 @@ public:
         displayCodesRecursive(p->right,path.append("1"));
     }
 
-    void createCodes(huffNode *p, string path)
-    {
-        if (p == NULL) return;
-        if (p->left == NULL && p->right == NULL)
-        {
-            codes[p->myChar].isActive = true;
-            codes[p->myChar].myCode = path;
-        }
-        createCodes(p->left,path.append("0"));
-        path.pop_back();
-        createCodes(p->right,path.append("1"));
-    }
 };

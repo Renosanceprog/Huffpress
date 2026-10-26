@@ -54,8 +54,6 @@ class writeModule
     {
         int padding = ctr;
         for (size_t i = 0; i < 8-padding; i++) writeBit(0);
-        file.seekp(0);
-        file.put(padding);
     }
 };
 
@@ -75,23 +73,28 @@ public:
     }
     void compressFile(string plaintextFilename, string outputFilename, HuffmanTree &hTree)
     {
+        if (hTree.totalChars == 0) { cout<<"Error: File is empty."<<endl; return; }
+
         string treeHeader; generateTreeHeaderString(hTree.tree, treeHeader);
         writeModule io = writeModule(outputFilename);
-        fstream plaintext(plaintextFilename);
+        ifstream plaintext(plaintextFilename, ios::in | ios::binary);
+        
+        if (!plaintext.is_open()) { printf("Error opening plaintext for compression.\n"); return; }
 
-        io.writeByte(0);
+        char* countPtr = (char*)&hTree.totalChars;
+        for (size_t i = 0; i < sizeof(hTree.totalChars); i++) {
+            io.writeByte(countPtr[i]);
+        }
 
         for (size_t i = 0; i < treeHeader.length(); i++)
         {
-            int bit;
-            if (treeHeader.at(i) == '0') bit = 0;
-            else bit = 1;
+            int bit = (treeHeader.at(i) == '0') ? 0 : 1;
             io.writeBit(bit);
             if (bit == 1) { io.writeByte(treeHeader.at(i+1)); i++; }
         }
 
         char ch;
-        while (plaintext.get(ch)) for (size_t i = 0; i < hTree.codes[ch].myCode.size(); i++) io.writeBit(hTree.codes[ch].myCode.at(i)-'0');
+        while (plaintext.get(ch)) for (size_t i = 0; i < hTree.codes[(unsigned char)ch].myCode.size(); i++) io.writeBit(hTree.codes[(unsigned char)ch].myCode.at(i)-'0');
 
         plaintext.close();
 
